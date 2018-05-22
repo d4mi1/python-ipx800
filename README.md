@@ -5,7 +5,7 @@ ipx800-python is a Python3 Library for controlling GCE-Electronics IPX800 V4 via
 ## Features to implement
 
  - [x] Control IPX800 relays and X8R extension 
- - [ ] Control light brightness via XPWM extension module
+ - [x] Control light brightness via XPWM extension module
  - [ ] Control roller shutters via X4VR extension module
  - [ ] ... Control all other extensions modules
 
