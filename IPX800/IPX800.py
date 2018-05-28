@@ -2,7 +2,7 @@
 # @Author: Damien FERRERE
 # @Date:   2018-05-06 20:44:51
 # @Last Modified by:   Damien FERRERE
-# @Last Modified time: 2018-05-23 22:03:44
+# @Last Modified time: 2018-05-28 20:47:08
 
 
 import requests
@@ -29,10 +29,14 @@ class IPX800:
   _cgi_api_url = None
   
   _relays_config = None
+  _relays_min_polling_time = 1 # seconds
+
   _pwm_config = None
+  _pwm_min_polling_time = 2 # seconds
 
-  _last_request_dt = datetime.datetime.fromtimestamp(0)
-
+  # minimum seconds before polling again 
+  _polling_delays = {'relays': 1, 'pwm': 2}
+  
   relays = None
   pwm_channels = None
 
@@ -45,6 +49,9 @@ class IPX800:
 
     self._json_api_url = base_url+"/api/xdevices.json?key="+api_key
     self._names_xml_url = base_url + '/global.xml'
+
+    d0 = datetime.datetime.fromtimestamp(0)
+    self._last_polling_dt = {'relays': d0, 'pwm': d0}
 
     
   def configure_relays(self, relays_config):
@@ -60,7 +67,7 @@ class IPX800:
     self.pwm_channels = {}
 
     for p in pwm_config.enabled_pwm_channels:
-      self.pwm_channels[p] = IPXPwmChannel(self, p) # init enabled pwm channels
+      self.pwm_channels['PWM%d' % p] = IPXPwmChannel(self, p) # init enabled pwm channels
 
     self._cgi_api_url = "http://"+self._pwm_config.username+":"+self._pwm_config.password+"@"
     self._cgi_api_url += self._host+":"+self._port+"/user/api.cgi"
@@ -79,7 +86,6 @@ class IPX800:
     if self._relays_config == None: 
       return False
 
-    print ("Setting relay No %d to %d" % (relay_no, is_on))
     command = 'SetR'
     
     if not is_on:
@@ -115,13 +121,13 @@ class IPX800:
     current_dt = datetime.datetime.now()
 
     # Prevent to poll IPX to many time
-    if (current_dt - self._last_request_dt).total_seconds() < 1.0:
-      return
+    if (current_dt - self._last_polling_dt['relays']).total_seconds() < self._polling_delays['relays']:
+      return True
 
-    self._last_request_dt = datetime.datetime.now()
+    self._last_polling_dt['relays'] = current_dt
+
     command_url = self._json_api_url + '&Get=R'
     
-    #print (command_url)
     r = requests.get(command_url)
 
     if r.status_code == 200:
@@ -187,33 +193,54 @@ class IPX800:
       return False
 
     command_url = self._cgi_api_url + '?SetPWM=%d&PWMValue=%d' % (channel_no, power)
-    print(command_url)
     r = requests.get(command_url)
 
     if r.status_code == 200:
-      self.pwm_channels[channel_no]._power = power
+      self.pwm_channels['PWM%d' % channel_no]._power = power
       return True
 
     return False
 
-  def request_pwm_channel(self, channel_no):
-    ''' Return the power of the specified pwm channel channel_no
-        - channel_no 1 to 12 for the extension 1 & 13 to 24 for the extension 2
+  def _request_pwm_channels(self):
+    ''' Request the power of all 24 PWM channels event not connected 
+        and update their values
 
-        http://IPX800_V4/api/xdevices.json?key=key&Get=XPWM|1
+        http://IPX800_V4/api/xdevices.json?key=key&Get=XPWM|1-24
     '''
 
     if self._pwm_config == None: 
-      return -1
+      return False
 
-    command_url = self._json_api_url + '&Get=XPWM|%d' % channel_no
+    current_dt = datetime.datetime.now()
+
+    # Prevent to poll IPX to many time
+    if (current_dt - self._last_polling_dt['pwm']).total_seconds() < self._polling_delays['pwm']:
+      return True
+
+    self._last_polling_dt['pwm'] = current_dt
+
+    command_url = self._json_api_url + '&Get=XPWM|1-24'
     
     r = requests.get(command_url)
 
     if r.status_code == 200:
       answer = r.json()
-      value = answer['PWM%d' % channel_no]
-      self.pwm_channels[channel_no]._power = value
-      return value
 
-    return -1
+      for key, value in answer.items():
+        if re.match(r'PWM\d{1,2}', key):
+          if (key in self.pwm_channels):
+            self.pwm_channels[key]._power = value
+
+    return True
+
+  def get_value_of_pwm_channel(self, channel_no):
+    ''' Return the value of a specific pwm channel 
+        From 0 to 100
+    '''
+
+    if self._pwm_config == None: 
+      return False
+
+    self._request_pwm_channels()
+
+    return self.pwm_channels['PWM%d' % channel_no]._power

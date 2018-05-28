@@ -2,7 +2,7 @@
 # @Author: Damien FERRERE
 # @Date:   2018-05-22 21:13:38
 # @Last Modified by:   Damien FERRERE
-# @Last Modified time: 2018-05-23 21:35:43
+# @Last Modified time: 2018-05-27 22:52:10
 
 class IPXPwmConfig:
   'IPX800 PWM Extension configuration class'
@@ -33,7 +33,7 @@ class IPXPwmChannel:
     self._ipx.set_pwm_channel(self.number, self._power)
 
   def reload_power(self):
-    self._power = self._ipx.request_pwm_channel(self.number)
+    self._power = self._ipx.get_value_of_pwm_channel(self.number)
 
   @property
   def power(self):
