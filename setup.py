@@ -2,13 +2,13 @@
 # @Author: Damien FERRERE
 # @Date:   2018-05-10 17:57:07
 # @Last Modified by:   Damien FERRERE
-# @Last Modified time: 2018-05-27 22:55:08
+# @Last Modified time: 2018-05-28 21:50:38
 
 from distutils.core import setup
 setup(
   name = 'IPX800',
   packages = ['IPX800'],
-  version = '0.1.3',
+  version = '0.1.4',
   description = 'Library for controlling GCE-Electronics IPX800',
   author = 'Damien FERRERE',
   author_email = 'dami1.ferrere@gmail.com',

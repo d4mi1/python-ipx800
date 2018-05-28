@@ -2,7 +2,7 @@
 # @Author: Damien FERRERE
 # @Date:   2018-05-06 20:44:51
 # @Last Modified by:   Damien FERRERE
-# @Last Modified time: 2018-05-28 20:47:08
+# @Last Modified time: 2018-05-28 21:43:53
 
 
 import requests
@@ -60,6 +60,8 @@ class IPX800:
 
     for r in relays_config.enabled_relays:
       self.relays['R%d' % r] = IPXRelay(self, r, 0) # init enabled relays
+
+    self._request_relays_names()
 
 
   def configure_pwm(self, pwm_config):
@@ -155,8 +157,6 @@ class IPX800:
       for r in self._relays_config.enabled_relays:
         relay_name = res.xml.xpath('//response/output%d' % r, first=True).text
         self.relays['R%d' % r].name = relay_name
-
-      self._relays_config.names_retrieved = True
     
 
 
@@ -170,9 +170,6 @@ class IPX800:
       return False
 
     self._request_relays_state()
-
-    if self._relays_config.names_retrieved == False: 
-      self._request_relays_names()
 
     return self.relays['R%d' % relay_no].is_on
 
