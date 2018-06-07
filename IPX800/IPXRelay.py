@@ -21,8 +21,9 @@ class IPXRelay:
   name = ''
   _ipx = None
   
-  def __init__(self, ipx, relay_no, current_relay_state):
+  def __init__(self, ipx, relay_no, name="", current_relay_state=False):
     self.number = relay_no
+    self.name = name
     self._is_on = current_relay_state
     self._ipx = ipx
 

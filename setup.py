@@ -8,7 +8,7 @@ from distutils.core import setup
 setup(
   name = 'IPX800',
   packages = ['IPX800'],
-  version = '0.1.4',
+  version = '0.1.5',
   description = 'Library for controlling GCE-Electronics IPX800',
   author = 'Damien FERRERE',
   author_email = 'dami1.ferrere@gmail.com',
