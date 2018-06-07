@@ -21,33 +21,38 @@ class IPXPwmConfig:
 
 class IPXPwmChannel:
   number = 0
-  _power = 0
+  power = 0
+  _is_on = False
   _ipx = None
 
   def __init__(self, ipx, channel_no):
     self.number = channel_no
     self._ipx = ipx
 
-  def set_to(self, power):
-    self._power = power
-    self._ipx.set_pwm_channel(self.number, self._power)
-
   def reload_power(self):
-    self._power = self._ipx.get_value_of_pwm_channel(self.number)
+    p = self._ipx.get_value_of_pwm_channel(self.number)
 
-  @property
-  def power(self):
-    return self._power
+    if p > 0:
+      self._is_on = True
+      self.power = p
+      print("reload_power p > 0")
+    # else we do not set power too keep last on power value
 
   @property
   def is_on(self):
-    if self.power > 0:
-      return True
-    else:
-      return False
+      return self._is_on
 
-  def turn_on(self):
-    self.set_to(100)
+  def turn_on(self, power=-1):
+    self._is_on = True
+    
+    if power == -1: # used last power value
+      if self.power == 0:
+        self.power = 100
+    else:
+      self.power = power
+    
+    self._ipx.set_pwm_channel(self.number, self.power)
 
   def turn_off(self):
-    self.set_to(0)
+    self._is_on = False
+    self._ipx.set_pwm_channel(self.number, 0)
