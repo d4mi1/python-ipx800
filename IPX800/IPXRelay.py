@@ -40,5 +40,5 @@ class IPXRelay:
     self._ipx.update_relay(self)
 
   def reload_state(self):
-    self.state = self._ipx.get_state_of_relay(self.number)
+    self._is_on = self._ipx.get_state_of_relay(self.number)
 

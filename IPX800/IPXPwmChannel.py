@@ -35,7 +35,8 @@ class IPXPwmChannel:
     if p > 0:
       self._is_on = True
       self.power = p
-      print("reload_power p > 0")
+    else:
+      self._is_on = False
     # else we do not set power too keep last on power value
 
   @property
